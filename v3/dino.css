@@ -1,0 +1,10 @@
+body {
+    font-family:'Courier New', Courier, monospace;
+    text-align: center;
+}
+
+#board {
+    background-color: lightgray;
+    border-bottom: 1px solid black;
+    transition: background-color 1s ease-in-out; /* Duración de 1 segundo */
+}
