@@ -11,6 +11,14 @@ let dinoX = 50;
 let dinoY = boardHeight - dinoHeight;
 let dinoImg;
 
+
+
+//Dino agachado
+let dinoDuck1;
+let dinoDuck2;
+let isDucking = false;
+
+
 //Añado: las imágenes del dinoasurio corriendo, el contador para refrescar y el ratio al que tienen que cambiar las imágenes
 let dinoMove1;
 let dinoMove2;
@@ -63,6 +71,7 @@ let birdMove2;
 let birdFrame = 0;
 
 //Medidas nubes
+let cloudArray = [];
 let cloudImg;
 let cloudWidth = 84;
 let cloudHeight = 101;
@@ -78,6 +87,8 @@ let sueloHeight = 28;
 //Coordenadas suelo
 let sueloY = 222;
 let sueloX = 0;
+let sueloX2 = boardWidth; // Segundo segmento del suelo, comienza justo después del primero.
+
 
 //physics
 let velocityX = -8; //cactus moving left speed
@@ -101,9 +112,27 @@ window.onload = function() {
 
     context = board.getContext("2d"); //used for drawing on the board
 
-    //draw initial dinosaur
-    // context.fillStyle="green";
-    // context.fillRect(dino.x, dino.y, dino.width, dino.height);
+    dinoDuck1 = new Image();
+    dinoDuck1.src = "./img/dino-duck1.png";
+
+    dinoDuck2 = new Image();
+    dinoDuck2.src = "./img/dino-duck2.png";
+
+    cloudImg = new Image();
+    cloudImg.src = "./img/cloud.png";
+    cloudImg.onload = function() {
+    // Añadir nubes iniciales al array
+    for (let i = 0; i < 3; i++) {
+        cloudArray.push({
+            img: cloudImg,
+            x: cloudX + i * 300,  // Espaciadas a lo largo del eje X
+            y: cloudY + Math.random() * 50 // Variar la altura un poco para no ser tan uniforme
+        });
+    }
+    // Crear las dos imágenes del dinosaurio agachado
+    
+
+}
 
     dinoImg = new Image();
     dinoImg.src = "./img/dino.png";
@@ -180,9 +209,12 @@ function update() {
 
         // Limpias de todo la pantalla
         context.clearRect(0, 0, board.width, board.height);
+        
+
+
         // Dibuja el dinosaurio muerto
-        context.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
-        context.drawImage(sueloImg, sueloX, sueloY, boardWidth, sueloHeight);
+        context.drawImage(dinoImg, dino.x, dino.y, dino.width, 94);
+        context.drawImage(sueloImg, 0, sueloY, boardWidth, sueloHeight);
 
         // Dibuja la pantalla de game over
         context.drawImage(gameOverImg, boardWidth / 2 - gameOverImg.width / 2, boardHeight / 2 - gameOverImg.height / 2); // Centrar la imagen
@@ -202,8 +234,23 @@ function update() {
 
     context.clearRect(0, 0, board.width, board.height);
 
+        sueloX += velocityX;
+        sueloX -= aceleracionObjetos;
+        sueloX2 += velocityX;
+        sueloX2 -= aceleracionObjetos;
 
-    context.drawImage(sueloImg, sueloX, sueloY, boardWidth, sueloHeight);
+        if (sueloX + boardWidth <= 0) {
+            sueloX = sueloX2 + boardWidth;
+        }
+        if (sueloX2 + boardWidth <= 0) {
+            sueloX2 = sueloX + boardWidth;
+        }
+
+        context.drawImage(sueloImg, sueloX, sueloY, boardWidth, sueloHeight);
+        context.drawImage(sueloImg, sueloX2, sueloY, boardWidth, sueloHeight);
+
+
+    //context.drawImage(sueloImg, sueloX, sueloY, boardWidth, sueloHeight);
     // Animación del dino
     velocityY += gravity;
     dino.y = Math.min(dino.y + velocityY, dinoY); // aplica gravedad, sin exceder el suelo
@@ -223,24 +270,45 @@ function update() {
 
     });
 
+
+
+
+
+    // Actualizar nubes
+    for (let i = 0; i < cloudArray.length; i++) {
+        let cloud = cloudArray[i];
+        cloud.x += velocityX / 2;  // Velocidad más lenta para las nubes
+        cloud.x -= aceleracionObjetos;
+        context.drawImage(cloud.img, cloud.x, cloud.y, cloudWidth, cloudHeight);
+
+        if (cloud.x + cloudWidth < 0) {
+            cloud.x = boardWidth + Math.random() * 200; // Reaparecer la nube al final con un poco de variación
+            cloud.y = cloudY + Math.random() * 50; // Variar la altura un poco
+        }
+    }
+
     // Incrementa y resetea el contador de frames
     if (dino.y === dinoY) { // Solo cambia frames si está en el suelo
         dinoFrame = (dinoFrame + 1) % (frameSwitchRate * 2); // Cambia entre 0 y frameSwitchRate * 2
     }
-    
-     // Selecciona la imagen del dinosaurio
-    let currentDinoImg = dino.y < dinoY ? dinoImg : (dinoFrame < frameSwitchRate ? dinoMove1 : dinoMove2);
-    context.drawImage(currentDinoImg, dino.x, dino.y, dino.width, dino.height);
-
-    birdFrame = (birdFrame + 1) % (frameSwitchRate * 2); // Cambia entre 0 y frameSwitchRate * 2
-
-    // Selecciona la imagen del dinosaurio
-
     //dino
     velocityY += gravity;
     dino.y = Math.min(dino.y + velocityY, dinoY); //apply gravity to current dino.y, making sure it doesn't exceed the ground
+     // Selecciona la imagen del dinosaurio
+    let currentDinoImg 
+    if(isDucking){
+        currentDinoImg = dinoFrame < frameSwitchRate ? dinoDuck1 : dinoDuck2;
+        dino.height=60;
+    } else {
+        currentDinoImg = dino.y < dinoY ? dinoImg : (dinoFrame < frameSwitchRate ? dinoMove1 : dinoMove2);
+        dino.height = 94;  // Restablecer la altura cuando no está agachado
+    }
+    context.drawImage(currentDinoImg, dino.x, dino.y + (isDucking ? 40 : 0), dino.width, dino.height);
 
-    //Aquí hay que hacer a los pteranodones
+    birdFrame = (birdFrame + 1) % (frameSwitchRate * 2); // Cambia entre 0 y frameSwitchRate * 2
+    
+
+    //Aquí incluimos a los pteranodones
     for (let i = 0; i < birdArray.length; i++) {
         let bird1 = birdArray[i];
         bird1.x += velocityX;
@@ -281,6 +349,9 @@ function update() {
     context.font="20px courier";
     score++;
     context.fillText(score, 5, 20);
+
+    
+
 }
 
 
@@ -297,8 +368,13 @@ function moveDino(e) {
         velocityY = -8;
     }
     else if (e.code == "ArrowDown" && dino.y == dinoY) {
-        //duck
+        isDucking=true;
     }
+    document.addEventListener("keyup", function (e) {
+        if (e.code == "ArrowDown") {
+            isDucking = false;
+        }
+    });
 
 }
 
@@ -346,7 +422,7 @@ function placeObstacles() {
         height: cactusHeight
     }
 
-    let altura = Math.floor(Math.random() * 70);
+    let altura = Math.floor(Math.random() * 200);
 
     let bird2 = {
         img : null,

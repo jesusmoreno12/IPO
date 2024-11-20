@@ -12,6 +12,9 @@ let dinoY = boardHeight - dinoHeight;
 let dinoImg;
 
 
+let dinoDuck1;
+let dinoDuck2;
+let isDucking = false;
 
 
 //Añado: las imágenes del dinoasurio corriendo, el contador para refrescar y el ratio al que tienen que cambiar las imágenes
@@ -90,9 +93,13 @@ window.onload = function() {
 
     context = board.getContext("2d"); //used for drawing on the board
 
-    //draw initial dinosaur
-    // context.fillStyle="green";
-    // context.fillRect(dino.x, dino.y, dino.width, dino.height);
+    
+    //Añado las imágenes de cuando este agachado
+    dinoDuck1 = new Image();
+    dinoDuck1.src = "./img/dino-duck1.png";
+
+    dinoDuck2 = new Image();
+    dinoDuck2.src = "./img/dino-duck2.png";
 
     dinoImg = new Image();
     dinoImg.src = "./img/dino.png";
@@ -163,7 +170,7 @@ function update() {
         // Limpias de todo la pantalla
         context.clearRect(0, 0, board.width, board.height);
         // Dibuja el dinosaurio muerto
-        context.drawImage(dinoImg, dino.x, dino.y, dino.width, dino.height);
+        context.drawImage(dinoImg, dino.x, dino.y, dino.width, 94);
         // Dibuja la pantalla de game over
         context.drawImage(gameOverImg, boardWidth / 2 - gameOverImg.width / 2, boardHeight / 2 - gameOverImg.height / 2); // Centrar la imagen
         //Añade el botón de retry
@@ -204,8 +211,15 @@ function update() {
     }
     
      // Selecciona la imagen del dinosaurio
-    let currentDinoImg = dino.y < dinoY ? dinoImg : (dinoFrame < frameSwitchRate ? dinoMove1 : dinoMove2);
-    context.drawImage(currentDinoImg, dino.x, dino.y, dino.width, dino.height);
+    let currentDinoImg 
+    if(isDucking){
+        currentDinoImg = dinoFrame < frameSwitchRate ? dinoDuck1 : dinoDuck2;
+        dino.height=60;
+    } else {
+        currentDinoImg = dino.y < dinoY ? dinoImg : (dinoFrame < frameSwitchRate ? dinoMove1 : dinoMove2);
+        dino.height = 94;  // Restablecer la altura cuando no está agachado
+    }
+    context.drawImage(currentDinoImg, dino.x, dino.y + (isDucking ? 40 : 0), dino.width, dino.height);
 
     birdFrame = (birdFrame + 1) % (frameSwitchRate * 2); // Cambia entre 0 y frameSwitchRate * 2
 
@@ -278,9 +292,13 @@ function moveDino(e) {
         velocityY = -8;
     }
     else if (e.code == "ArrowDown" && dino.y == dinoY) {
-        //duck
+        isDucking = true;
     }
-
+    document.addEventListener("keyup", function (e) {
+        if (e.code == "ArrowDown") {
+            isDucking = false;
+        }
+    });
 }
 
 function restartGame() {
